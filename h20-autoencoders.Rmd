@@ -8,6 +8,30 @@ output:
 ---
 ```{r prelims, include=FALSE}
 library(h2o)
+library(tidyverse)
 h2o.init()
+
+airlines <- read.csv("dataset/allyears2k_headers.csv", header = TRUE, stringsAsFactors = FALSE)
+```
+
+### Data analysis
+```{r}
+summary(airlines)
+str(airlines)
+```
+There are a total of 31 columns where 7 of those are strings and possibly factors. We will try to figure out which are the factor columns and convert them to `factor` next!
+
+### Subset chracter columns from the airline dataset
+```{r}
+non_numeric_columns <- airlines[, sapply(airlines, class) == "character"]
+```
+
+### Counting number of unique values from `non_numeric_columns`
+```{r}
+# Function to return unique value count
+unique_count <- function(x) {
+    length(unique(x))
+}
+sapply(non_numeric_columns, unique_count) # apply function to non_numeric_columns
 ```
 
