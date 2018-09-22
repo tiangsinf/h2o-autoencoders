@@ -45,5 +45,46 @@ str(airlines)
 ```
 Now we have 6 factor variables, 1 character variable ("TailNum") and 24 integer variablers
 
+### Convert df to h2o objects
+```{r}
+h2o_airlines <- as.h2o(airlines)
+
+# Separating frames to train, valid and test sets
+parts <- h2o.splitFrame(h2o_airlines, 0.8, seed = 123)
+train <- parts[[1]]
+test <- parts[[2]]
+
+x <- names(airlines)
+```
+
+### Apply h2o deeplearning autuencoder
+```{r}
+m <- h2o.deeplearning(x,
+                      training_frame = train,
+                      autoencoder = TRUE,
+                      epochs = 200,
+                      model_id = "dp_autoencoder",
+                      train_samples_per_iteration = nrow(train),
+                      score_interval = 0,
+                      score_duty_cycle = 1.0,
+                      hidden = c(200, 200),
+                      activation = "Tanh"
+                      )
+```
+
+### Model analysis
+```{r}
+score_hist <- as.data.frame(h2o.scoreHistory(m))
+score_hist
+
+plot(score_hist$training_rmse, type = "l")
+
+score_hist %>%
+    ggplot(aes(x = (as.numeric(row.names(score_hist))), y = training_rmse)) +
+    geom_line() +
+    geom_point() +
+    xlab("index") +
+    ylab("Training RMSE")
+```
 
 
