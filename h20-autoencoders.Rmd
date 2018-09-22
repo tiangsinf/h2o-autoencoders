@@ -6,7 +6,7 @@ output:
   html_document: 
     keep_md: yes
 ---
-```{r prelims, include=FALSE}
+```{r, prelims, include=FALSE}
 library(h2o)
 library(tidyverse)
 h2o.init()
@@ -58,26 +58,27 @@ x <- names(airlines)
 ```
 
 ### Apply h2o deeplearning autuencoder
-```{r}
+```{r, 31 inputs, cache=TRUE}
 m <- h2o.deeplearning(x,
                       training_frame = train,
                       autoencoder = TRUE,
-                      epochs = 200,
-                      model_id = "dp_autoencoder",
+                      epochs = 300,
+                      model_id = "dp_autoencoder_1layer",
+                      
                       train_samples_per_iteration = nrow(train),
                       score_interval = 0,
                       score_duty_cycle = 1.0,
-                      hidden = c(200, 200),
+                      stopping_rounds = 15,
+                      
+                      hidden = c(31), # single layer with 31 inputs
                       activation = "Tanh"
                       )
 ```
 
-### Model analysis
+### Single layer autoencoder model analysis
 ```{r}
 score_hist <- as.data.frame(h2o.scoreHistory(m))
 score_hist
-
-plot(score_hist$training_rmse, type = "l")
 
 score_hist %>%
     ggplot(aes(x = (as.numeric(row.names(score_hist))), y = training_rmse)) +
@@ -85,6 +86,93 @@ score_hist %>%
     geom_point() +
     xlab("index") +
     ylab("Training RMSE")
+
+# limit x and y axis to check if RMSE is still dropping
+score_hist %>%
+    ggplot(aes(x = (as.numeric(row.names(score_hist))), y = training_rmse)) +
+    geom_line() +
+    geom_point() +
+    xlim(30, 41) +
+    ylim(0.08, 0.095) +
+    xlab("index") +
+    ylab("Training RMSE")
+```
+Only 41 epochs. I was hoping it can get close to 300. Try compressing the input from 31 to 20.
+
+```{r cache=TRUE}
+m2 <- h2o.deeplearning(x,
+                      training_frame = train,
+                      autoencoder = TRUE,
+                      epochs = 300,
+                      model_id = "dp_autoencoder_1layer",
+                      
+                      train_samples_per_iteration = nrow(train),
+                      score_interval = 0,
+                      score_duty_cycle = 1.0,
+                      stopping_rounds = 15,
+                      
+                      hidden = c(31), # single layer with 31 inputs
+                      activation = "Tanh"
+                      )
+
+# also trying out multi layer autoencoder
+m3 <- h2o.deeplearning(x,
+                      training_frame = train,
+                      autoencoder = TRUE,
+                      epochs = 300,
+                      model_id = "dp_autoencoder_1layer",
+                      
+                      train_samples_per_iteration = nrow(train),
+                      score_interval = 0,
+                      score_duty_cycle = 1.0,
+                      stopping_rounds = 15,
+                      
+                      hidden = c(31, 15, 31),
+                      activation = "Tanh"
+                      )
 ```
 
+```{r}
+m4 <- h2o.deeplearning(x,
+                      training_frame = train,
+                      autoencoder = TRUE,
+                      epochs = 300,
+                      model_id = "dp_autoencoder_1layer",
+                      
+                      train_samples_per_iteration = nrow(train),
+                      score_interval = 0,
+                      score_duty_cycle = 1.0,
+                      stopping_rounds = 15,
+                      
+                      hidden = c(20, 10, 20),
+                      activation = "Tanh"
+                      )
 
+m5 <- h2o.deeplearning(x,
+                      training_frame = train,
+                      autoencoder = TRUE,
+                      epochs = 300,
+                      model_id = "dp_autoencoder_1layer",
+                      
+                      train_samples_per_iteration = nrow(train),
+                      score_interval = 0,
+                      score_duty_cycle = 1.0,
+                      stopping_rounds = 15,
+                      
+                      hidden = c(20),
+                      activation = "Tanh"
+                      )
+```
+
+```{r}
+score_hist <- as.data.frame(h2o.scoreHistory(m))
+score_hist2 <- as.data.frame(h2o.scoreHistory(m2))
+score_hist3 <- as.data.frame(h2o.scoreHistory(m3))
+score_hist3 <- as.data.frame(h2o.scoreHistory(m4))
+score_hist3 <- as.data.frame(h2o.scoreHistory(m5))
+score_hist
+score_hist2
+score_hist3
+score_hist4
+score_hist5
+```
