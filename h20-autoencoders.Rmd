@@ -34,4 +34,16 @@ unique_count <- function(x) {
 }
 sapply(non_numeric_columns, unique_count) # apply function to non_numeric_columns
 ```
+Prbably can convert `UniqueCarrier`, `Origin`, `Dest`, `ConcellationCode`, `IsArrDelayed` and `IsDepDelayed` to `factor`.
+
+### Converting columns to factor
+```{r}
+n <- names(non_numeric_columns[-2])
+
+airlines[, c(paste(n, sep = ", "))] <- as.data.frame(sapply(airlines[, c(paste(n, sep = ", "))], as.factor))
+str(airlines)
+```
+Now we have 6 factor variables, 1 character variable ("TailNum") and 24 integer variablers
+
+
 
